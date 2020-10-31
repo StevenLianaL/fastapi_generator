@@ -7,9 +7,11 @@ from fastapi_generator.config import fs, ps
 
 
 class MainApp:
-
-    def create_app(self):
+    @plac.opt('orm', "generate orm and pydantic models", type=int, choices=[0, 1])
+    def create_app(self, orm: int = 0):
         self.create_app_files()
+        if orm:
+            print(f"mode orm")
         self.write_files()
 
     def write_files(self):
@@ -53,6 +55,12 @@ class MainApp:
                 w.write(text)
         except FileNotFoundError:
             print(f"{ps.template_dir / parent / name} not found")
+
+    def generate_orm(self):
+        pass
+
+    def generate_interface(self):
+        pass
 
 
 if __name__ == '__main__':
