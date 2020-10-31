@@ -4,5 +4,7 @@
 ## Requirements
 - python 3.8
 ## Version
+- 0.0.2 
+    - create main app files 
 - 0.0.1
     - only create app/main.py
