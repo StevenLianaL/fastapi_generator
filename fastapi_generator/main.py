@@ -46,10 +46,13 @@ class MainApp:
         else:
             file = Path(name)
             template = ps.template_dir / name
-        with template.open(mode='r', encoding='utf8') as f:
-            text = f.read()
-        with file.open(mode='w', encoding='utf8') as w:
-            w.write(text)
+        try:
+            with template.open(mode='r', encoding='utf8') as f:
+                text = f.read()
+            with file.open(mode='w', encoding='utf8') as w:
+                w.write(text)
+        except FileNotFoundError:
+            print(f"{ps.template_dir / parent / name} not found")
 
 
 if __name__ == '__main__':
