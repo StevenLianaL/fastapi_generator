@@ -15,7 +15,7 @@ install_requires = [
 install_requires_with_version = [i for i in all_requires for j in install_requires if j in i]
 setuptools.setup(
     name="fastapi_generator",
-    version="0.0.2",
+    version="0.1",
     author="Steven Wang",
     author_email="wangzhou8284@outlook.com",
     description="Used to quickly generate fastapi project.",
