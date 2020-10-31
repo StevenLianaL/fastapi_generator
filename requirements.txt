@@ -8,6 +8,7 @@ keyring==21.4.0
 packaging==20.4
 pkginfo==1.6.1
 plac==1.2.0
+pydantic==1.7.1
 Pygments==2.7.2
 pyparsing==2.4.7
 readme-renderer==28.0
