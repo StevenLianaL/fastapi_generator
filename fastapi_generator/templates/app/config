@@ -15,10 +15,11 @@ class Settings(BaseSettings):
     DEBUG = is_debug()
 
     # db
-    MYSQL_HOST = '' if not DEBUG else 'localhost'
-    MYSQL_DB = '' if not DEBUG else 'test'
-    MYSQL_USER = '' if not DEBUG else 'test'
-    MYSQL_PSWD = '' if not DEBUG else 'test'
+    DB_MODE = 'mysql'
+    DB_HOST = '' if not DEBUG else 'localhost'
+    DB_NAME = '' if not DEBUG else 'test'
+    DB_USER = '' if not DEBUG else 'test'
+    DB_PSWD = '' if not DEBUG else 'test'
 
     # dir
     ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent
