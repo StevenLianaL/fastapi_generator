@@ -1,0 +1,14 @@
+import sqlalchemy
+from databases import Database
+
+from app.config import project
+
+
+DATABASE_URL = f"mysql://{project.MYSQL_USER}:{project.MYSQL_PSWD}@{project.MYSQL_HOST}/" \
+               f"{project.MYSQL_DB}?charset=utf8"
+
+database = Database(DATABASE_URL)
+
+metadata = sqlalchemy.MetaData()
+
+engine = sqlalchemy.create_engine(DATABASE_URL, encoding='utf-8')

@@ -13,7 +13,8 @@ class MainApp:
         self.write_files()
 
     def write_files(self):
-        self.write_file(name='config.py', parent='app')
+        for file in fs.app_files:
+            self.write_file(name=file, parent='app')
 
     @staticmethod
     def create_app_files():
@@ -39,8 +40,12 @@ class MainApp:
         :param name: file name
         :param parent: if file is under folder, use parent
         """
-        file = Path(parent, name) if parent else Path(name)
-        template = ps.template_dir / name
+        if parent:
+            file = Path(parent, name).with_suffix('.py')
+            template = ps.template_dir / parent / name
+        else:
+            file = Path(name)
+            template = ps.template_dir / name
         with template.open(mode='r', encoding='utf8') as f:
             text = f.read()
         with file.open(mode='w', encoding='utf8') as w:
