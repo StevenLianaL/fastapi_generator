@@ -8,6 +8,7 @@ class FastapiSettings:
     app_files = ('__init__', 'config', 'db', 'data', 'models', 'interface', 'main')
 
     root_dir = Path('app')
+    orm_file = root_dir / 'models.py'
 
     orm_require_package = ('pandas', 'orm')
 
@@ -15,6 +16,9 @@ class FastapiSettings:
 class ProjectSettings:
     root_dir = Path(__file__).resolve(strict=True).parent
     template_dir = root_dir / 'templates'
+
+    orm_file = template_dir / 'app' / 'models'
+    interface_file = template_dir / 'app' / 'interface'
 
 
 fs = FastapiSettings()
