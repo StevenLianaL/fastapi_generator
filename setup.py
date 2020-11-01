@@ -22,6 +22,12 @@ setuptools.setup(
     python_requires='>=3.8',
     install_requires=[
         'plac',
-        'envoy'
+        'envoy',
+        'fastapi',
+        'uvicorn',
+        'sqlalchemy',
+        'databases',
+        'aiomysql',
+        'mysqlclient'
     ]
 )

@@ -6,6 +6,14 @@
 2. config config.py db or set in environment
 ## Requirements
 - python 3.8
+## Command
+    # generate main app
+    python -m fastapi_generator.main
+    # run fastapi app
+    uvicorn app.main:app --reload
+
+    
+    
 ## Version
 - 0.1
     - generate base app: can run it!
