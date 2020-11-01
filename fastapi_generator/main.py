@@ -4,6 +4,7 @@ from typing import Optional
 import plac
 
 from fastapi_generator.config import fs, ps
+from fastapi_generator.utils.helper import is_package_installed
 
 
 class MainApp:
@@ -11,7 +12,9 @@ class MainApp:
     def create_app(self, orm: int = 0):
         self.create_app_files()
         if orm:
-            print(f"mode orm")
+            for package in fs.orm_require_package:
+                is_installed = is_package_installed(package=package)
+                assert is_installed is True, f"You need run:\n\tpip install {package} for orm"
         self.write_files()
 
     def write_files(self):

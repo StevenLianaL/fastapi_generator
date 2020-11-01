@@ -9,6 +9,9 @@
 ## Command
     # generate main app
     python -m fastapi_generator.main
+    # gen main app with orm
+    pip install pandas orm
+    python -m fastapi_generator.main -o 1
     # run fastapi app
     uvicorn app.main:app --reload
 

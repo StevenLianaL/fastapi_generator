@@ -9,6 +9,8 @@ class FastapiSettings:
 
     root_dir = Path('app')
 
+    orm_require_package = ('pandas', 'orm')
+
 
 class ProjectSettings:
     root_dir = Path(__file__).resolve(strict=True).parent
