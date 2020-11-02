@@ -19,6 +19,8 @@ class MainApp(App):
             if not folder.exists():
                 folder.mkdir()
 
+        fs.sub_app_dir.mkdir(exist_ok=True)
+
         for file in fs.app_files:
             self.write_file(name=file, parent='app')
 
