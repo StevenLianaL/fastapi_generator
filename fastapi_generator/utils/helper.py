@@ -1,9 +1,22 @@
 from pathlib import Path
+from typing import List, Optional
 
 import envoy
 import pandas as pd
 
 from fastapi_generator.data import space, orm_type_mapping, python_type_mapping, pydantic_type_mapping
+
+
+class FileMixin:
+
+    @classmethod
+    def write_rows(cls, file: Path, rows: Optional[List[str]] = None, row: Optional[str] = None, mode: str = 'w'):
+        assert bool(rows) ^ bool(row), "row and rows can work only one."
+        if not rows:
+            rows = [row]
+        with file.open(mode=mode, encoding='utf8') as fa:
+            for row in rows:
+                fa.write(f"{row}\n")
 
 
 class TableMixin:
@@ -32,7 +45,7 @@ class Creation:
     pass
 
 
-class OrmCreation(Creation, TableMixin):
+class OrmCreation(Creation, TableMixin, FileMixin):
     """Used to generate orm for tables."""
 
     def generate_orm(self, db_name: str, engine, orm_file: Path):
@@ -43,9 +56,7 @@ class OrmCreation(Creation, TableMixin):
             "from app.db import database\n",
             "metadata = sqlalchemy.MetaData()\n\n"
         )
-        with orm_file.open(mode='w', encoding='utf8') as fa:
-            for row in rows:
-                fa.write(row + '\n')
+        self.write_rows(file=orm_file, mode='w', rows=rows)
         tables = self.read_tables(db_name=db_name, engine=engine)
         tables.groupby('TABLE_NAME').apply(self.make_orm_table, file=orm_file)
 
@@ -58,20 +69,16 @@ class OrmCreation(Creation, TableMixin):
             f'{space * 4}__metadata__ = metadata\n'
         )
         # write table orm meta
-        with file.open(mode='a', encoding='utf8') as fa:
-            for row in rows:
-                fa.write(row + '\n')
+        self.write_rows(file=file, mode='a', rows=rows)
         # write table col field
         table.apply(self.make_orm_field, axis=1, file=file)
 
-        with file.open(mode='a', encoding='utf8') as fa:
-            fa.write('\n\n')
+        self.write_rows(file=file, mode='a', row='\n')
 
     def make_orm_field(self, col: pd.Series, file: Path):
         """"""
         field = self.generate_field(col, file=file)
-        with file.open(mode='a', encoding='utf8') as fa:
-            fa.write(field + '\n')
+        self.write_rows(file=file, mode='a', row=field)
 
     def generate_field(self, field: pd.Series, file: Path) -> str:
         params = []
@@ -109,8 +116,7 @@ class OrmCreation(Creation, TableMixin):
             elif col_key == 'MUL':
                 foreign_name = f"{col_name[:-3]}s".capitalize()
                 foreign_key_str = f"{space * 4}# {col_name[:-3]}=orm.ForeignKey({foreign_name})"
-                with file.open(mode='a', encoding='utf8') as fa:
-                    fa.write(foreign_key_str + '\n')
+                self.write_rows(file=file, mode='a', row=foreign_key_str)
 
         # str len
         try:
@@ -133,15 +139,13 @@ class OrmCreation(Creation, TableMixin):
         return len(params) <= 1
 
 
-class InterfaceCreation(Creation, TableMixin):
+class InterfaceCreation(Creation, TableMixin, FileMixin):
     def generate_interfaces(self, db_name: str, engine, interface_file: Path):
         rows = (
             "from pydantic import BaseModel",
             "from datetime import datetime\n\n"
         )
-        with interface_file.open(mode='w', encoding='utf8') as fa:
-            for row in rows:
-                fa.write(row + '\n')
+        self.write_rows(file=interface_file, mode='w', rows=rows)
         tables = self.read_tables(db_name=db_name, engine=engine)
         tables.groupby('TABLE_NAME').apply(self.make_orm_model, file=interface_file)
 
