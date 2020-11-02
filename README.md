@@ -15,6 +15,8 @@
     
     
 ## Version
+- 0.1.3
+    - auto load sub app
 - 0.1.2
     - write main app project files
 - 0.1.1
