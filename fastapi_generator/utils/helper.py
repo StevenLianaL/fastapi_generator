@@ -23,7 +23,8 @@ class TableMixin:
         return model
 
     @staticmethod
-    def combine_param(res: str, param_str: str) -> str:
+    def combine_param(res: str, param_str: str, is_first: bool = True) -> str:
+        param_str = param_str if is_first else f" {param_str}"
         return res[:-1] + param_str + res[-1]
 
 
@@ -80,7 +81,7 @@ class OrmCreation(Creation, TableMixin):
         if is_null:
             params.append(is_null)
             null_str = f"allow_null={is_null},"
-            res = self.combine_param(res=res, param_str=null_str)
+            res = self.combine_param(res=res, param_str=null_str, is_first=self._is_param_first(params))
 
         # default has (null, CURRENT_TIMESTAMP, int, float, empty str, str)
         col_default = field['COLUMN_DEFAULT']  # Set default
@@ -88,7 +89,7 @@ class OrmCreation(Creation, TableMixin):
             params.append(col_default)
             default_val = python_type_mapping[col_type](col_default)
             default_str = f"default='{default_val}'," if isinstance(default_val, str) else f"default={default_val},"
-            res = self.combine_param(res=res, param_str=default_str)
+            res = self.combine_param(res=res, param_str=default_str, is_first=self._is_param_first(params))
 
         # keys has (MUL PRI UNI)
         col_key = field['COLUMN_KEY']
@@ -96,12 +97,12 @@ class OrmCreation(Creation, TableMixin):
             if col_key == 'UNI':
                 params.append(col_key)
                 unique_str = f"unique=True,"
-                res = self.combine_param(res=res, param_str=unique_str)
+                res = self.combine_param(res=res, param_str=unique_str, is_first=self._is_param_first(params))
 
             elif col_key == 'PRI':
                 params.append(col_key)
                 pk_str = f"primary_key=True,"
-                res = self.combine_param(res=res, param_str=pk_str)
+                res = self.combine_param(res=res, param_str=pk_str, is_first=self._is_param_first(params))
 
             elif col_key == 'MUL':
                 foreign_name = f"{col_name[:-3]}s".capitalize()
@@ -115,7 +116,7 @@ class OrmCreation(Creation, TableMixin):
             if col_str_len > 0:
                 params.append(col_str_len)
                 len_str = f"max_length={col_str_len},"
-                res = self.combine_param(res=res, param_str=len_str)
+                res = self.combine_param(res=res, param_str=len_str, is_first=self._is_param_first(params))
         except ValueError:
             pass
 
@@ -123,6 +124,11 @@ class OrmCreation(Creation, TableMixin):
         if len(params):
             res = res[:-2] + res[-1]
         return res
+
+    @staticmethod
+    def _is_param_first(params: list):
+        """Only used to determine whether the parameter is the first parameter of the field."""
+        return len(params) <= 1
 
 
 def is_package_installed(package: str) -> bool:
