@@ -34,7 +34,7 @@ class MainApp:
         for file in fs.app_files:
             Path(fs.root_dir, file).with_suffix('.py').touch()
         for app_dir in fs.app_dirs:
-            Path(fs.root_dir, app_dir).mkdir()
+            Path(fs.root_dir, app_dir).mkdir(exist_ok=True)
 
         # create top files
         for file in fs.top_files:
@@ -67,11 +67,11 @@ class MainApp:
             from app.config import project
         except ImportError as e:
             raise Exception(f'cannot import engine:{e}')
-        orm_creation = OrmCreation()
-        orm_creation.generate_orm(db_name=project.DB_NAME, engine=engine, orm_file=fs.orm_file)
-        interface_creation = InterfaceCreation()
-        interface_creation.generate_interfaces(
-            db_name=project.DB_NAME, engine=engine, interface_file=fs.interface_file)
+        orm_creation = OrmCreation(db_name=project.DB_NAME, engine=engine, file=fs.orm_file)
+        orm_creation.generate()
+        interface_creation = InterfaceCreation(
+            db_name=project.DB_NAME, engine=engine, file=fs.interface_file)
+        interface_creation.generate()
 
 
 if __name__ == '__main__':

@@ -1,5 +1,7 @@
+from abc import abstractmethod
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import envoy
 import pandas as pd
@@ -41,59 +43,73 @@ class TableMixin:
         return res[:-1] + param_str + res[-1]
 
 
-class Creation:
-    pass
+@dataclass
+class Creation(FileMixin, TableMixin):
+    db_name: str
+    engine: any
+    file: Path
+    _rows: Tuple[str] = field(default_factory=tuple)
 
+    def generate(self):
+        self.write_rows(file=self.file, mode='w', rows=self._rows)
+        tables = self.read_tables(db_name=self.db_name, engine=self.engine)
+        tables.groupby('TABLE_NAME').apply(self._make_from_table)
 
-class OrmCreation(Creation, TableMixin, FileMixin):
-    """Used to generate orm for tables."""
-
-    def generate_orm(self, db_name: str, engine, orm_file: Path):
-        """generate orm to orm_file by db_name"""
-        rows = (
-            "import orm",
-            "import sqlalchemy\n",
-            "from app.db import database\n",
-            "metadata = sqlalchemy.MetaData()\n\n"
-        )
-        self.write_rows(file=orm_file, mode='w', rows=rows)
-        tables = self.read_tables(db_name=db_name, engine=engine)
-        tables.groupby('TABLE_NAME').apply(self.make_orm_table, file=orm_file)
-
-    def make_orm_table(self, table, file: Path):
+    def _make_from_table(self, table: pd.DataFrame):
         tb_name: str = table['TABLE_NAME'].values[0]
-        rows = (
+
+        # write table orm meta
+        self.write_rows(file=self.file, mode='a', rows=self._class_rows(tb_name=tb_name))
+        # write table col field
+        table.apply(self._make_field, axis=1)
+
+        self.write_rows(file=self.file, mode='a', row='\n')
+
+    def _make_field(self, col: pd.Series):
+        the_field = self._generate_field(col)
+        self.write_rows(file=self.file, mode='a', row=the_field)
+
+    @abstractmethod
+    def _class_rows(self, tb_name: str) -> Tuple[str]:
+        """"""
+
+    @abstractmethod
+    def _generate_field(self, col: pd.Series) -> str:
+        """"""
+
+
+@dataclass
+class OrmCreation(Creation):
+    """Used to generate orm for tables."""
+    _rows: Tuple[str] = (
+        "import orm",
+        "import sqlalchemy\n",
+        "from app.db import database\n",
+        "metadata = sqlalchemy.MetaData()\n\n"
+    )
+
+    def _class_rows(self, tb_name: str) -> Tuple[str]:
+        return (
             f"class {self.count_model_name(tb_name=tb_name)}(orm.Model):",
             f'{space * 4}__tablename__ = "{tb_name}"',
             f'{space * 4}__database__ = database',
             f'{space * 4}__metadata__ = metadata\n'
         )
-        # write table orm meta
-        self.write_rows(file=file, mode='a', rows=rows)
-        # write table col field
-        table.apply(self.make_orm_field, axis=1, file=file)
 
-        self.write_rows(file=file, mode='a', row='\n')
-
-    def make_orm_field(self, col: pd.Series, file: Path):
-        """"""
-        field = self.generate_field(col, file=file)
-        self.write_rows(file=file, mode='a', row=field)
-
-    def generate_field(self, field: pd.Series, file: Path) -> str:
+    def _generate_field(self, col: pd.Series) -> str:
         params = []
-        col_name: str = field['COLUMN_NAME']
-        col_type = field['DATA_TYPE']
+        col_name: str = col['COLUMN_NAME']
+        col_type = col['DATA_TYPE']
         res = f"{space * 4}{col_name} = orm.{orm_type_mapping[col_type]}()"
 
-        is_null = field['IS_NULLABLE'] == 'YES'  # Set the default to None
+        is_null = col['IS_NULLABLE'] == 'YES'  # Set the default to None
         if is_null:
             params.append(is_null)
             null_str = f"allow_null={is_null},"
             res = self.combine_param(res=res, param_str=null_str, is_first=self._is_param_first(params))
 
         # default has (null, CURRENT_TIMESTAMP, int, float, empty str, str)
-        col_default = field['COLUMN_DEFAULT']  # Set default
+        col_default = col['COLUMN_DEFAULT']  # Set default
         if col_default is not None and col_default != 'CURRENT_TIMESTAMP':  # only set int/float/str
             params.append(col_default)
             default_val = python_type_mapping[col_type](col_default)
@@ -101,7 +117,7 @@ class OrmCreation(Creation, TableMixin, FileMixin):
             res = self.combine_param(res=res, param_str=default_str, is_first=self._is_param_first(params))
 
         # keys has (MUL PRI UNI)
-        col_key = field['COLUMN_KEY']
+        col_key = col['COLUMN_KEY']
         if col_key:  # cannot handle foreignkey
             if col_key == 'UNI':
                 params.append(col_key)
@@ -116,11 +132,11 @@ class OrmCreation(Creation, TableMixin, FileMixin):
             elif col_key == 'MUL':
                 foreign_name = f"{col_name[:-3]}s".capitalize()
                 foreign_key_str = f"{space * 4}# {col_name[:-3]}=orm.ForeignKey({foreign_name})"
-                self.write_rows(file=file, mode='a', row=foreign_key_str)
+                self.write_rows(file=self.file, mode='a', row=foreign_key_str)
 
         # str len
         try:
-            col_str_len = int(float(str(field['CHARACTER_MAXIMUM_LENGTH'])))
+            col_str_len = int(float(str(col['CHARACTER_MAXIMUM_LENGTH'])))
             if col_str_len > 0:
                 params.append(col_str_len)
                 len_str = f"max_length={col_str_len},"
@@ -139,34 +155,22 @@ class OrmCreation(Creation, TableMixin, FileMixin):
         return len(params) <= 1
 
 
-class InterfaceCreation(Creation, TableMixin, FileMixin):
-    def generate_interfaces(self, db_name: str, engine, interface_file: Path):
-        rows = (
-            "from pydantic import BaseModel",
-            "from datetime import datetime\n\n"
-        )
-        self.write_rows(file=interface_file, mode='w', rows=rows)
-        tables = self.read_tables(db_name=db_name, engine=engine)
-        tables.groupby('TABLE_NAME').apply(self.make_orm_model, file=interface_file)
+@dataclass
+class InterfaceCreation(Creation):
+    _rows: Tuple[str] = (
+        "from pydantic import BaseModel\n",
+        "from datetime import datetime\n\n"
+    )
 
-    def make_orm_model(self, table, file: Path):
-        tb_name: str = table['TABLE_NAME'].values[0]
-        interface_name_row = f"class {self.count_model_name(tb_name=tb_name)}(BaseModel):"
-        self.write_rows(file=file, mode='a', row=interface_name_row)
-        table.apply(self.make_model_field, file=file, axis=1)
-        self.write_rows(file=file, mode='a', row='\n')
+    def _class_rows(self, tb_name: str) -> Tuple[str]:
+        return f"class {self.count_model_name(tb_name=tb_name)}(BaseModel):",
 
-    def make_model_field(self, field: pd.Series, file: Path):
-        res = self.generate_field(field=field)
-        self.write_rows(file=file, mode='a', row=res)
-
-    @staticmethod
-    def generate_field(field: pd.Series):
+    def _generate_field(self, col: pd.Series) -> str:
         # name / type / default
-        col_name: str = field['COLUMN_NAME']
-        col_type = field['DATA_TYPE']
+        col_name: str = col['COLUMN_NAME']
+        col_type = col['DATA_TYPE']
         res = f"{space * 4}{col_name}: {pydantic_type_mapping[col_type]}"
-        col_default = field['COLUMN_DEFAULT']  # Set default
+        col_default = col['COLUMN_DEFAULT']  # Set default
         if col_default is not None and col_default != 'CURRENT_TIMESTAMP':
             default_val = python_type_mapping[col_type](col_default)
             default_str = f"'{default_val}'" if isinstance(default_val, str) else f"{default_val}"
