@@ -151,12 +151,17 @@ class InterfaceCreation(Creation, TableMixin, FileMixin):
 
     def make_orm_model(self, table, file: Path):
         tb_name: str = table['TABLE_NAME'].values[0]
-        print(f"class {self.count_model_name(tb_name=tb_name)}(BaseModel):")
+        interface_name_row = f"class {self.count_model_name(tb_name=tb_name)}(BaseModel):"
+        self.write_rows(file=file, mode='a', row=interface_name_row)
         table.apply(self.make_model_field, file=file, axis=1)
-        print('\n')
+        self.write_rows(file=file, mode='a', row='\n')
+
+    def make_model_field(self, field: pd.Series, file: Path):
+        res = self.generate_field(field=field)
+        self.write_rows(file=file, mode='a', row=res)
 
     @staticmethod
-    def make_model_field(field: pd.Series, file: Path):
+    def generate_field(field: pd.Series):
         # name / type / default
         col_name: str = field['COLUMN_NAME']
         col_type = field['DATA_TYPE']
@@ -166,7 +171,7 @@ class InterfaceCreation(Creation, TableMixin, FileMixin):
             default_val = python_type_mapping[col_type](col_default)
             default_str = f"'{default_val}'" if isinstance(default_val, str) else f"{default_val}"
             res += f' = {default_str}'
-        print(res)
+        return res
 
 
 def is_package_installed(package: str) -> bool:
