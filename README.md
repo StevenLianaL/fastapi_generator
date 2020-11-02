@@ -18,6 +18,8 @@
     
     
 ## Version
+- 0.2.1
+    - generate sub app with auto load api
 - 0.2
     - generate sub app
 - 0.1.3

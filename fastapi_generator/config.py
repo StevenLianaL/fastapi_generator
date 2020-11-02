@@ -23,7 +23,7 @@ class FastapiSettings:
 class SubAppSettings:
     fs = FastapiSettings()
 
-    app_files = [f"{i}.py" for i in ('app', 'help', 'interface', 'config')]
+    app_files = [f"{i}" for i in ('app', 'help', 'interface', 'config')]
 
 
 class ProjectSettings:

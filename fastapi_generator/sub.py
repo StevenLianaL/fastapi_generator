@@ -37,10 +37,20 @@ class SubApp(App):
     def write_file(self, file_name: str):
         sub_template = ps.template_dir / 'sub'
         file = sub_template / file_name
+
+        # read
         with file.open(mode='r', encoding='utf8') as f:
             text = f.read()
-        target = self.root_dir / f"{self.name}_{file_name}"
+
+        # write to target
+        target = Path(self.root_dir, f"{self.name}_{file_name}").with_suffix('.py')
         with target.open(mode='w', encoding='utf8') as w:
+            if target.stem == f"{self.name}_config":
+                text = text.replace('sign_app_name', self.name)
+            elif target.stem == f"{self.name}_app":
+                old_text = 'import_setting_flag'
+                new_text = f"from app.sub_apps.{self.name}.{self.name}_config import settings"
+                text = text.replace(old_text, new_text)
             w.write(text)
 
 

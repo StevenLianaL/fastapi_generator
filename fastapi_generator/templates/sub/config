@@ -1,0 +1,14 @@
+from pydantic import BaseSettings
+
+from app.config import project
+
+
+class Settings(BaseSettings):
+    # dir
+    root_dir = project.SUB_APP_DIR / 'sign_app_name'
+    router_dir = root_dir / 'router'
+
+    app_name = root_dir.name
+
+
+settings = Settings()
