@@ -20,6 +20,12 @@ class FastapiSettings:
     require_file = root_dir.parent / 'requirements.txt'
 
 
+class SubAppSettings:
+    fs = FastapiSettings()
+
+    app_files = ('__init__', 'app', 'help', 'interface', 'config')
+
+
 class ProjectSettings:
     root_dir = Path(__file__).resolve(strict=True).parent
     template_dir = root_dir / 'templates'
@@ -30,3 +36,4 @@ class ProjectSettings:
 
 fs = FastapiSettings()
 ps = ProjectSettings()
+ss = SubAppSettings()
