@@ -12,24 +12,13 @@ class MainApp(App):
         super(MainApp, self).create_app()
         self.generate_orm()
 
-    @staticmethod
-    def create_app_files():
-        # create folders
+    def write_files(self):
+
         for folder in fs.top_dirs:
             folder = Path(folder)
             if not folder.exists():
                 folder.mkdir()
 
-        # create app files
-        for file in fs.app_files:
-            Path(fs.root_dir, file).with_suffix('.py').touch()
-        fs.sub_app_dir.mkdir(exist_ok=True)
-
-        # create top files
-        for file in fs.top_files:
-            Path(file).touch()
-
-    def write_files(self):
         for file in fs.app_files:
             self.write_file(name=file, parent='app')
 

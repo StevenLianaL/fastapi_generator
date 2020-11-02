@@ -7,16 +7,10 @@ from fastapi_generator.config import ps
 
 class App:
     def create_app(self):
-        self.create_app_files()
         self.write_files()
 
     @abstractmethod
     def write_files(self):
-        """"""
-
-    @staticmethod
-    @abstractmethod
-    def create_app_files():
         """"""
 
     @staticmethod
@@ -26,7 +20,7 @@ class App:
         :param parent: if file is under folder, use parent
         """
         if parent:
-            file = Path(parent, name).with_suffix('.py')
+            file = Path(parent, name)
             template = ps.template_dir / parent / name
         else:
             file = Path(name)
