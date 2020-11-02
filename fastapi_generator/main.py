@@ -4,7 +4,7 @@ from typing import Optional
 import plac
 
 from fastapi_generator.config import fs, ps
-from fastapi_generator.utils.helper import is_package_installed, OrmCreation
+from fastapi_generator.utils.helper import is_package_installed, OrmCreation, InterfaceCreation
 
 
 class MainApp:
@@ -17,7 +17,6 @@ class MainApp:
                 is_installed = is_package_installed(package=package)
                 assert is_installed is True, f"You need run:\n\tpip install {package}"
             self.generate_orm()
-            self.generate_interface()
 
     def write_files(self):
         for file in fs.app_files:
@@ -70,9 +69,9 @@ class MainApp:
             raise Exception(f'cannot import engine:{e}')
         orm_creation = OrmCreation()
         orm_creation.generate_orm(db_name=project.DB_NAME, engine=engine, orm_file=fs.orm_file)
-
-    def generate_interface(self):
-        pass
+        interface_creation = InterfaceCreation()
+        interface_creation.generate_interfaces(
+            db_name=project.DB_NAME, engine=engine, interface_file=fs.interface_file)
 
 
 if __name__ == '__main__':

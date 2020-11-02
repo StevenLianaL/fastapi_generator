@@ -3,7 +3,7 @@ from pathlib import Path
 import envoy
 import pandas as pd
 
-from fastapi_generator.data import space, orm_type_mapping, python_type_mapping
+from fastapi_generator.data import space, orm_type_mapping, python_type_mapping, pydantic_type_mapping
 
 
 class TableMixin:
@@ -33,6 +33,8 @@ class Creation:
 
 
 class OrmCreation(Creation, TableMixin):
+    """Used to generate orm for tables."""
+
     def generate_orm(self, db_name: str, engine, orm_file: Path):
         """generate orm to orm_file by db_name"""
         rows = (
@@ -129,6 +131,38 @@ class OrmCreation(Creation, TableMixin):
     def _is_param_first(params: list):
         """Only used to determine whether the parameter is the first parameter of the field."""
         return len(params) <= 1
+
+
+class InterfaceCreation(Creation, TableMixin):
+    def generate_interfaces(self, db_name: str, engine, interface_file: Path):
+        rows = (
+            "from pydantic import BaseModel",
+            "from datetime import datetime\n\n"
+        )
+        with interface_file.open(mode='w', encoding='utf8') as fa:
+            for row in rows:
+                fa.write(row + '\n')
+        tables = self.read_tables(db_name=db_name, engine=engine)
+        tables.groupby('TABLE_NAME').apply(self.make_orm_model, file=interface_file)
+
+    def make_orm_model(self, table, file: Path):
+        tb_name: str = table['TABLE_NAME'].values[0]
+        print(f"class {self.count_model_name(tb_name=tb_name)}(BaseModel):")
+        table.apply(self.make_model_field, file=file, axis=1)
+        print('\n')
+
+    @staticmethod
+    def make_model_field(field: pd.Series, file: Path):
+        # name / type / default
+        col_name: str = field['COLUMN_NAME']
+        col_type = field['DATA_TYPE']
+        res = f"{space * 4}{col_name}: {pydantic_type_mapping[col_type]}"
+        col_default = field['COLUMN_DEFAULT']  # Set default
+        if col_default is not None and col_default != 'CURRENT_TIMESTAMP':
+            default_val = python_type_mapping[col_type](col_default)
+            default_str = f"'{default_val}'" if isinstance(default_val, str) else f"{default_val}"
+            res += f' = {default_str}'
+        print(res)
 
 
 def is_package_installed(package: str) -> bool:
