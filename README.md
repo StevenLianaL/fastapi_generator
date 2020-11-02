@@ -8,13 +8,18 @@
 - python 3.8
 ## Command
     # generate main app
-    python -m fastapi_generator.main with orm
+    python -m fastapi_generator.main
     # run fastapi app
     uvicorn app.main:app --reload
+    # generate sub app
+    python -m fastapi_generator.sub app-name
+
 
     
     
 ## Version
+- 0.2
+    - generate sub app
 - 0.1.3
     - auto load sub app
 - 0.1.2
