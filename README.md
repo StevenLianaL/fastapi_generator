@@ -8,16 +8,15 @@
 - python 3.8
 ## Command
     # generate main app
-    python -m fastapi_generator.main
-    # gen main app with orm
-    pip install pandas orm
-    python -m fastapi_generator.main -o 1
+    python -m fastapi_generator.main with orm
     # run fastapi app
     uvicorn app.main:app --reload
 
     
     
 ## Version
+- 0.1.1
+    - generate with orm
 - 0.1
     - generate base app: can run it!
 - 0.0.2 

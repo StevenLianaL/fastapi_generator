@@ -4,19 +4,14 @@ from typing import Optional
 import plac
 
 from fastapi_generator.config import fs, ps
-from fastapi_generator.utils.helper import is_package_installed, OrmCreation, InterfaceCreation
+from fastapi_generator.utils.helper import OrmCreation, InterfaceCreation
 
 
 class MainApp:
-    @plac.opt('orm', "generate orm and pydantic models", type=int, choices=[0, 1])
-    def create_app(self, orm: int = 0):
+    def create_app(self):
         self.create_app_files()
         self.write_files()
-        if orm:
-            for package in fs.orm_require_package:
-                is_installed = is_package_installed(package=package)
-                assert is_installed is True, f"You need run:\n\tpip install {package}"
-            self.generate_orm()
+        self.generate_orm()
 
     def write_files(self):
         for file in fs.app_files:
