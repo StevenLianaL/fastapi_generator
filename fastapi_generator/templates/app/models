@@ -1,9 +1,0 @@
-import orm
-import sqlalchemy
-
-from app.db import database
-
-metadata = sqlalchemy.MetaData()
-
-
-

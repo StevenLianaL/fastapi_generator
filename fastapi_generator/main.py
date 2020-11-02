@@ -4,7 +4,7 @@ from typing import Optional
 import plac
 
 from fastapi_generator.config import fs, ps
-from fastapi_generator.utils.helper import is_package_installed, read_tables, make_orm_table
+from fastapi_generator.utils.helper import is_package_installed, OrmCreation
 
 
 class MainApp:
@@ -63,17 +63,13 @@ class MainApp:
 
     @staticmethod
     def generate_orm():
-        with Path(ps.template_dir / 'help', 'orm_import').open(encoding='utf8') as f:
-            import_text = f.read()
-        with ps.orm_file.open(mode='w', encoding='utf8') as w:
-            w.write(import_text)
         try:
             from app.db import engine
             from app.config import project
         except ImportError as e:
             raise Exception(f'cannot import engine:{e}')
-        tables = read_tables(db_name=project.DB_NAME, engine=engine)
-        tables.groupby('TABLE_NAME').apply(make_orm_table, file=fs.orm_file)
+        orm_creation = OrmCreation()
+        orm_creation.generate_orm(db_name=project.DB_NAME, engine=engine, orm_file=fs.orm_file)
 
     def generate_interface(self):
         pass
