@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from fastapi_generator.data import fastapi_run_requires
+
 
 class FastapiSettings:
     top_dirs = ('app', 'log', 'test')
@@ -11,7 +13,8 @@ class FastapiSettings:
     orm_file = root_dir / 'models.py'
     interface_file = root_dir / 'interface.py'
 
-    orm_require_package = ('pandas', 'orm')
+    requires = fastapi_run_requires
+    require_file = root_dir.parent / 'requirements.txt'
 
 
 class ProjectSettings:

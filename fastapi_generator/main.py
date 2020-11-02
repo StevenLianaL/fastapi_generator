@@ -17,6 +17,11 @@ class MainApp:
         for file in fs.app_files:
             self.write_file(name=file, parent='app')
 
+        for file in fs.top_files:
+            self.write_file(name=file)
+        else:
+            self.write_requirements()
+
     @staticmethod
     def create_app_files():
         # create folders
@@ -54,6 +59,12 @@ class MainApp:
                 w.write(text)
         except FileNotFoundError:
             print(f"{ps.template_dir / parent / name} not found")
+
+    @staticmethod
+    def write_requirements():
+        with fs.require_file.open(mode='a', encoding='utf8') as w:
+            for package in fs.requires:
+                w.write(f"{package}\n")
 
     @staticmethod
     def generate_orm():

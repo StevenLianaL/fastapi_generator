@@ -15,6 +15,8 @@
     
     
 ## Version
+- 0.1.2
+    - write main app project files
 - 0.1.1
     - generate with orm
 - 0.1

@@ -36,3 +36,7 @@ pydantic_type_mapping = {
     "date": 'datetime',
     "timestamp": 'datetime',
 }
+
+fastapi_run_requires = (
+    'fastapi', 'uvicorn', 'sqlalchemy', 'databases', 'aiomysql',
+    'mysqlclient', 'orm')
