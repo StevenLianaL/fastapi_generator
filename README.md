@@ -13,11 +13,14 @@
     uvicorn app.main:app --reload
     # generate sub app
     python -m fastapi_generator.sub app-name
-
+    # generate api from sub app / if app not exist, create it.
+    python -m fastapi_generator.api app-name api-name 
 
     
     
 ## Version
+- 0.3
+    - generate api of sub app.
 - 0.2.1
     - generate sub app with auto load api
 - 0.2
