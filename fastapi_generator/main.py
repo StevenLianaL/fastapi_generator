@@ -1,9 +1,10 @@
 from pathlib import Path
+from typing import Optional
 
 import plac
 
 from fastapi_generator.app import App
-from fastapi_generator.config import fs
+from fastapi_generator.config import fs, ps
 from fastapi_generator.utils.helper import OrmCreation, InterfaceCreation
 
 
@@ -28,6 +29,26 @@ class MainApp(App):
             self.write_file(name=file)
         else:
             self.write_requirements()
+
+    @staticmethod
+    def write_file(name: str, parent: Optional[str] = None):
+        """
+        :param name: file name
+        :param parent: if file is under folder, use parent
+        """
+        if parent:
+            file = Path(parent, name)
+            template = ps.template_dir / parent / name
+        else:
+            file = Path(name)
+            template = ps.template_dir / name
+        try:
+            with template.open(mode='r', encoding='utf8') as f:
+                text = f.read()
+            with file.open(mode='w', encoding='utf8') as w:
+                w.write(text)
+        except FileNotFoundError:
+            print(f"{ps.template_dir / parent / name} not found")
 
     @staticmethod
     def write_requirements():
