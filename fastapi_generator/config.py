@@ -6,10 +6,10 @@ from fastapi_generator.data import fastapi_run_requires
 class FastapiSettings:
     top_dirs = ('app', 'log', 'test')
     top_files = ('README.md', 'requirements.txt', '.gitignore')
-    app_dirs = ('sub_apps',)
     app_files = ('__init__', 'config', 'db', 'data', 'models', 'interface', 'main')
 
     root_dir = Path('app')
+    sub_app_dir = root_dir / 'sub_apps'
     orm_file = root_dir / 'models.py'
     interface_file = root_dir / 'interface.py'
 

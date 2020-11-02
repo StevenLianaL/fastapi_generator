@@ -33,8 +33,7 @@ class MainApp:
         # create app files
         for file in fs.app_files:
             Path(fs.root_dir, file).with_suffix('.py').touch()
-        for app_dir in fs.app_dirs:
-            Path(fs.root_dir, app_dir).mkdir(exist_ok=True)
+        fs.sub_app_dir.mkdir(exist_ok=True)
 
         # create top files
         for file in fs.top_files:

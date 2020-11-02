@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     # dir
     ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent
     APP_DIR = ROOT_DIR / 'app'
+    SUB_APP_DIR = APP_DIR / 'sub_apps'
     LOG_DIR = ROOT_DIR / 'log'
 
 
