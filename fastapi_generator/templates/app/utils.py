@@ -1,6 +1,6 @@
 import importlib
 
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 
 
 def load_app(sub_app_name: str) -> FastAPI:
@@ -12,3 +12,13 @@ def load_app(sub_app_name: str) -> FastAPI:
             return var
     else:
         raise Exception('Not found FastAPI app.')
+
+
+def load_api(sub_app_name: str, api_name: str) -> APIRouter:
+    module = f"app.sub_apps.{sub_app_name}.router.{api_name}_api"
+    api = importlib.import_module(module)
+    for var in api.__dict__.values():
+        if isinstance(var, APIRouter):
+            return var
+    else:
+        raise Exception('Not found APIRouter.')
