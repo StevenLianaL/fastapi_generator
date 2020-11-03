@@ -14,6 +14,8 @@
     fastapi main
     # generate main app with orm
     fastapi orm db_host db_name db_user db_pswd
+    # only generate orm
+    fastapi orm --only db_host db_name db_user db_pswd
     fastapi orm localhost test test test
     # generate sub app
     fastapi sub app-name
@@ -27,6 +29,8 @@
     
     
 ## Version
+- 0.3.7 
+    - add param is_only_orm
 - 0.3.6
     - add orm generate
 - 0.3.5

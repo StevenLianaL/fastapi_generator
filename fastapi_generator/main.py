@@ -14,8 +14,11 @@ class MainApp:
         self.write_files()
 
     def create_app_with_orm(
-            self, db_name: str, db_host: str, db_user: str, db_pswd: str):
-        self.write_files()
+            self, db_name: str = '', db_host: str = '', db_user: str = '', db_pswd: str = '',
+            is_only_orm: bool = False
+    ):
+        if not is_only_orm:
+            self.write_files()
         self.generate_orm(db_name=db_name, db_host=db_host, db_user=db_user, db_pswd=db_pswd)
 
     def write_files(self):
@@ -63,15 +66,13 @@ class MainApp:
 
     @staticmethod
     def generate_orm(db_name: str, db_host: str, db_user: str, db_pswd: str):
-        try:
-            from app.db import engine
-            from app.config import project
-        except ImportError:
-            database_url = f"mysql://{db_user}:{db_pswd}@{db_host}/" \
-                           f"{db_name}?charset=utf8"
-            engine = sqlalchemy.create_engine(database_url, encoding='utf-8')
-        orm_creation = OrmCreation(db_name=project.DB_NAME, engine=engine, file=fs.orm_file)
+        if not fs.root_dir.exists():
+            fs.root_dir.mkdir()
+        database_url = f"mysql://{db_user}:{db_pswd}@{db_host}/" \
+                       f"{db_name}?charset=utf8"
+        engine = sqlalchemy.create_engine(database_url, encoding='utf-8')
+        orm_creation = OrmCreation(db_name=db_name, engine=engine, file=fs.orm_file)
         orm_creation.generate()
         interface_creation = InterfaceCreation(
-            db_name=project.DB_NAME, engine=engine, file=fs.interface_file)
+            db_name=db_name, engine=engine, file=fs.interface_file)
         interface_creation.generate()
