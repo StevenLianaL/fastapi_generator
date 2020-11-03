@@ -6,6 +6,8 @@
 2. config config.py db or set in environment
 ## Requirements
 - python 3.8
+- click
+- pandas
 ## Command
     # generate main app
     python -m fastapi_generator.main

@@ -3,7 +3,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-import envoy
 import pandas as pd
 
 from fastapi_generator.data import space, orm_type_mapping, python_type_mapping, pydantic_type_mapping
@@ -176,9 +175,3 @@ class InterfaceCreation(Creation):
             default_str = f"'{default_val}'" if isinstance(default_val, str) else f"{default_val}"
             res += f' = {default_str}'
         return res
-
-
-def is_package_installed(package: str) -> bool:
-    package_res = envoy.run('pip list')
-    packages = [p.split(' ')[0] for p in package_res.std_out.split('\n') if p]
-    return package in packages

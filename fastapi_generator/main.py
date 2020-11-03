@@ -1,16 +1,13 @@
 from pathlib import Path
 from typing import Optional
 
-import plac
-
-from fastapi_generator.app import App
 from fastapi_generator.config import fs, ps
 from fastapi_generator.utils.helper import OrmCreation, InterfaceCreation
 
 
-class MainApp(App):
+class MainApp:
     def create_app(self):
-        super(MainApp, self).create_app()
+        self.write_files()
         self.generate_orm()
 
     def write_files(self):
@@ -68,8 +65,3 @@ class MainApp(App):
         interface_creation = InterfaceCreation(
             db_name=project.DB_NAME, engine=engine, file=fs.interface_file)
         interface_creation.generate()
-
-
-if __name__ == '__main__':
-    app = MainApp()
-    plac.call(app.create_app)

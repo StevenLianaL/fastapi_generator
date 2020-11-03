@@ -2,25 +2,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-import plac
-
-from fastapi_generator.app import App
 from fastapi_generator.config import ss, ps
 
 
 @dataclass
-class SubApp(App):
+class SubApp:
     """Generate sub app for main"""
     name: str = ''
     root_dir: Optional[Path] = None
 
-    @plac.pos('name', "sub app name", type=str)
-    def create_app(self, name):
-        """
-        :type name: str
-        """
+    def create_app(self, name: str):
         self.name = name
-        super(SubApp, self).create_app()
+        self.write_files()
 
     def write_files(self):
         self.root_dir = ss.fs.sub_app_dir / f"{self.name}"
@@ -52,8 +45,3 @@ class SubApp(App):
                 new_text = f"from app.sub_apps.{self.name}.{self.name}_config import settings"
                 text = text.replace(old_text, new_text)
             w.write(text)
-
-
-if __name__ == '__main__':
-    app = SubApp()
-    plac.call(app.create_app)
