@@ -8,6 +8,7 @@
 - python 3.8
 - click
 - pandas
+- databases
 ## Command
     # generate main app
     fastapi main
