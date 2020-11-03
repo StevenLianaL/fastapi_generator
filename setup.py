@@ -7,7 +7,7 @@ with Path("README.md").open("r", encoding='utf8') as fh:
 
 setuptools.setup(
     name="fastapi_generator",
-    version="0.3",
+    version="0.3.1",
     author="Steven Wang",
     author_email="wangzhou8284@outlook.com",
     description="Used to quickly generate fastapi project.",
