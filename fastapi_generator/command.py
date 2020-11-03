@@ -10,13 +10,13 @@ def fastapi():
     pass
 
 
-@click.command()
+@fastapi.command()
 def main():
     app = MainApp()
     app.create_app()
 
 
-@click.command()
+@fastapi.command()
 @click.option('--db_host', default="localhost")
 @click.option('--db_name', default='test')
 @click.option('--db_user', default="test")
