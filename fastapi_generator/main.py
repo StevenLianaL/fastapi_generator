@@ -1,14 +1,22 @@
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
+
+import sqlalchemy
 
 from fastapi_generator.config import fs, ps
 from fastapi_generator.utils.helper import OrmCreation, InterfaceCreation
 
 
+@dataclass
 class MainApp:
     def create_app(self):
         self.write_files()
-        self.generate_orm()
+
+    def create_app_with_orm(
+            self, db_name: str, db_host: str, db_user: str, db_pswd: str):
+        self.write_files()
+        self.generate_orm(db_name=db_name, db_host=db_host, db_user=db_user, db_pswd=db_pswd)
 
     def write_files(self):
 
@@ -54,12 +62,14 @@ class MainApp:
                 w.write(f"{package}\n")
 
     @staticmethod
-    def generate_orm():
+    def generate_orm(db_name: str, db_host: str, db_user: str, db_pswd: str):
         try:
             from app.db import engine
             from app.config import project
-        except ImportError as e:
-            raise Exception(f'cannot import engine:{e}')
+        except ImportError:
+            database_url = f"mysql://{db_user}:{db_pswd}@{db_host}/" \
+                           f"{db_name}?charset=utf8"
+            engine = sqlalchemy.create_engine(database_url, encoding='utf-8')
         orm_creation = OrmCreation(db_name=project.DB_NAME, engine=engine, file=fs.orm_file)
         orm_creation.generate()
         interface_creation = InterfaceCreation(

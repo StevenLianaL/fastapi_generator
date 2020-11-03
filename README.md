@@ -12,16 +12,23 @@
 ## Command
     # generate main app
     fastapi main
-    # run fastapi app
-    uvicorn app.main:app --reload
+    # generate main app with orm
+    fastapi orm db_host db_name db_user db_pswd
+    fastapi orm localhost test test test
     # generate sub app
     fastapi sub app-name
     # generate api from sub app / if app not exist, create it.
     fastapi api app-name api-name 
+    # run fastapi app
+    uvicorn app.main:app --reload
+    
+
 
     
     
 ## Version
+- 0.3.6
+    - add orm generate
 - 0.3.5
     - update command with click
 - 0.3

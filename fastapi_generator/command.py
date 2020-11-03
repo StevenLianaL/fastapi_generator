@@ -10,10 +10,20 @@ def fastapi():
     pass
 
 
-@fastapi.command()
+@click.command()
 def main():
     app = MainApp()
     app.create_app()
+
+
+@click.command()
+@click.option('--db_host', default="localhost")
+@click.option('--db_name', default='test')
+@click.option('--db_user', default="test")
+@click.option('--db_pswd', default="test")
+def orm(db_name, db_host, db_user, db_pswd):
+    app = MainApp()
+    app.create_app_with_orm(db_name=db_name, db_pswd=db_pswd, db_host=db_host, db_user=db_user)
 
 
 @fastapi.command()
