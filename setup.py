@@ -7,7 +7,7 @@ with Path("README.md").open("r", encoding='utf8') as fh:
 
 setuptools.setup(
     name="fastapi_generator",
-    version="0.3.2",
+    version="0.3.4",
     author="Steven Wang",
     author_email="wangzhou8284@outlook.com",
     description="Used to quickly generate fastapi project.",
@@ -16,7 +16,9 @@ setuptools.setup(
     url="https://github.com/StevenLianaL/fastapi_generator",
     packages=setuptools.find_packages(),
     package_data={
-        '': ['*']
+        '': ['*', '.gitignore'],
+        'fastapi_generator': ['templates/sub/*', 'templates/api/*'],
+
     },
     classifiers=[
         "Programming Language :: Python :: 3",
