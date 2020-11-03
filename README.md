@@ -10,17 +10,19 @@
 - pandas
 ## Command
     # generate main app
-    python -m fastapi_generator.main
+    fastapi main
     # run fastapi app
     uvicorn app.main:app --reload
     # generate sub app
-    python -m fastapi_generator.sub app-name
+    fastapi sub app-name
     # generate api from sub app / if app not exist, create it.
-    python -m fastapi_generator.api app-name api-name 
+    fastapi api app-name api-name 
 
     
     
 ## Version
+- 0.3.5
+    - update command with click
 - 0.3
     - generate api of sub app.
 - 0.2.1
