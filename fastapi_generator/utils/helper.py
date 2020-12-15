@@ -5,7 +5,10 @@ from typing import List, Optional, Tuple
 
 import pandas as pd
 
-from fastapi_generator.data import space, orm_type_mapping, python_type_mapping, pydantic_type_mapping
+from fastapi_generator.data import (
+    space, orm_type_mapping, python_type_mapping,
+    pydantic_type_mapping, tortoise_type_mapping, orm_field_options, tortoise_field_options
+)
 
 
 class FileMixin:
@@ -48,6 +51,9 @@ class Creation(FileMixin, TableMixin):
     engine: any
     file: Path
     _rows: Tuple[str] = field(default_factory=tuple)
+    _col_prefix: str = ''
+    _type_mapping: dict = field(default_factory=dict)
+    _field_options: dict = field(default_factory=dict)
 
     def generate(self):
         self.write_rows(file=self.file, mode='w', rows=self._rows)
@@ -65,21 +71,81 @@ class Creation(FileMixin, TableMixin):
         self.write_rows(file=self.file, mode='a', row='\n')
 
     def _make_field(self, col: pd.Series):
-        the_field = self._generate_field(col)
+        the_field = self.generate_field(col)
         self.write_rows(file=self.file, mode='a', row=the_field)
 
     @abstractmethod
     def _class_rows(self, tb_name: str) -> Tuple[str]:
         """"""
 
-    @abstractmethod
-    def _generate_field(self, col: pd.Series) -> str:
-        """"""
+    @staticmethod
+    def _is_param_first(params: list):
+        """Only used to determine whether the parameter is the first parameter of the field."""
+        return len(params) <= 1
+
+    def generate_field(self, col: pd.Series) -> str:
+        params = []
+        col_name: str = col['COLUMN_NAME']
+        col_type = col['DATA_TYPE']
+        res = f"{space * 4}{col_name} = {self._col_prefix}.{self._type_mapping[col_type]}()"
+
+        is_null = col['IS_NULLABLE'] == 'YES'  # Set the default to None
+        if is_null:
+            params.append(is_null)
+            null_str = f"{self._field_options['IS_NULLABLE']}={is_null},"
+            res = self.combine_param(res=res, param_str=null_str, is_first=self._is_param_first(params))
+
+        # default has (null, CURRENT_TIMESTAMP, int, float, empty str, str)
+        col_default = col['COLUMN_DEFAULT']  # Set default
+        if col_default is not None and col_default != 'CURRENT_TIMESTAMP':  # only set int/float/str
+            params.append(col_default)
+            default_val = python_type_mapping[col_type](col_default)
+            if isinstance(default_val, str):
+                default_str = f"{self._field_options['COLUMN_DEFAULT']}='{default_val}',"
+            else:
+                default_str = f"{self._field_options['COLUMN_DEFAULT']}={default_val},"
+            res = self.combine_param(res=res, param_str=default_str, is_first=self._is_param_first(params))
+
+        # keys has (MUL PRI UNI)
+        col_key = col['COLUMN_KEY']
+        if col_key:  # cannot handle foreignkey
+            if col_key == 'UNI':
+                params.append(col_key)
+                unique_str = f"{self._field_options['UNI']}=True,"
+                res = self.combine_param(res=res, param_str=unique_str, is_first=self._is_param_first(params))
+
+            elif col_key == 'PRI':
+                params.append(col_key)
+                pk_str = f"{self._field_options['PRI']}=True,"
+                res = self.combine_param(res=res, param_str=pk_str, is_first=self._is_param_first(params))
+
+            elif col_key == 'MUL':
+                foreign_name = f"{col_name[:-3]}s".capitalize()
+                foreign_key_str = f"{space * 4}# {col_name[:-3]}=orm.ForeignKey({foreign_name})"
+                self.write_rows(file=self.file, mode='a', row=foreign_key_str)
+
+        # str len
+        try:
+            col_str_len = int(float(str(col['CHARACTER_MAXIMUM_LENGTH'])))
+            if col_str_len > 0:
+                params.append(col_str_len)
+                len_str = f"{self._field_options['CHARACTER_MAXIMUM_LENGTH']}={col_str_len},"
+                res = self.combine_param(res=res, param_str=len_str, is_first=self._is_param_first(params))
+        except ValueError:
+            pass
+
+        # handle suffix comma
+        if len(params):
+            res = res[:-2] + res[-1]
+        return res
 
 
 @dataclass
 class OrmCreation(Creation):
     """Used to generate orm for tables."""
+    _col_prefix = 'orm'
+    _type_mapping = orm_type_mapping
+    _field_options = orm_field_options
     _rows: Tuple[str] = (
         "import orm",
         "import sqlalchemy\n",
@@ -95,63 +161,20 @@ class OrmCreation(Creation):
             f'{space * 4}__metadata__ = metadata\n'
         )
 
-    def _generate_field(self, col: pd.Series) -> str:
-        params = []
-        col_name: str = col['COLUMN_NAME']
-        col_type = col['DATA_TYPE']
-        res = f"{space * 4}{col_name} = orm.{orm_type_mapping[col_type]}()"
 
-        is_null = col['IS_NULLABLE'] == 'YES'  # Set the default to None
-        if is_null:
-            params.append(is_null)
-            null_str = f"allow_null={is_null},"
-            res = self.combine_param(res=res, param_str=null_str, is_first=self._is_param_first(params))
+@dataclass
+class TortoiseOrmCreation(Creation):
+    _col_prefix = 'fields'
+    _type_mapping = tortoise_type_mapping
+    _field_options = tortoise_field_options
+    _rows: Tuple[str] = (
+        "from tortoise import fields, models",
+    )
 
-        # default has (null, CURRENT_TIMESTAMP, int, float, empty str, str)
-        col_default = col['COLUMN_DEFAULT']  # Set default
-        if col_default is not None and col_default != 'CURRENT_TIMESTAMP':  # only set int/float/str
-            params.append(col_default)
-            default_val = python_type_mapping[col_type](col_default)
-            default_str = f"default='{default_val}'," if isinstance(default_val, str) else f"default={default_val},"
-            res = self.combine_param(res=res, param_str=default_str, is_first=self._is_param_first(params))
-
-        # keys has (MUL PRI UNI)
-        col_key = col['COLUMN_KEY']
-        if col_key:  # cannot handle foreignkey
-            if col_key == 'UNI':
-                params.append(col_key)
-                unique_str = f"unique=True,"
-                res = self.combine_param(res=res, param_str=unique_str, is_first=self._is_param_first(params))
-
-            elif col_key == 'PRI':
-                params.append(col_key)
-                pk_str = f"primary_key=True,"
-                res = self.combine_param(res=res, param_str=pk_str, is_first=self._is_param_first(params))
-
-            elif col_key == 'MUL':
-                foreign_name = f"{col_name[:-3]}s".capitalize()
-                foreign_key_str = f"{space * 4}# {col_name[:-3]}=orm.ForeignKey({foreign_name})"
-                self.write_rows(file=self.file, mode='a', row=foreign_key_str)
-
-        # str len
-        try:
-            col_str_len = int(float(str(col['CHARACTER_MAXIMUM_LENGTH'])))
-            if col_str_len > 0:
-                params.append(col_str_len)
-                len_str = f"max_length={col_str_len},"
-                res = self.combine_param(res=res, param_str=len_str, is_first=self._is_param_first(params))
-        except ValueError:
-            pass
-
-        # handle suffix comma
-        if len(params):
-            res = res[:-2] + res[-1]
-        return res
-
-    @staticmethod
-    def _is_param_first(params: list):
-        """Only used to determine whether the parameter is the first parameter of the field."""
-        return len(params) <= 1
+    def _class_rows(self, tb_name: str) -> Tuple[str]:
+        return (
+            f"class {self.count_model_name(tb_name=tb_name)}(models.Model):",
+        )
 
 
 @dataclass
@@ -164,7 +187,7 @@ class InterfaceCreation(Creation):
     def _class_rows(self, tb_name: str) -> Tuple[str]:
         return f"class {self.count_model_name(tb_name=tb_name)}(BaseModel):",
 
-    def _generate_field(self, col: pd.Series) -> str:
+    def generate_field(self, col: pd.Series) -> str:
         # name / type / default
         col_name: str = col['COLUMN_NAME']
         col_type = col['DATA_TYPE']

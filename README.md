@@ -17,6 +17,7 @@
     # only generate orm
     fastapi orm --only db_host db_name db_user db_pswd
     fastapi orm localhost test test test
+    fastapi orm --mode t
     # generate sub app
     fastapi sub app-name
     # generate api from sub app / if app not exist, create it.
@@ -29,6 +30,8 @@
     
     
 ## Version
+- 0.4.0
+  - support tortoise orm with mode t
 - 0.3.7 
     - add param is_only_orm
 - 0.3.6
