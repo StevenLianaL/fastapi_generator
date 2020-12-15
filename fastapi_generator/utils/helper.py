@@ -50,13 +50,13 @@ class Creation(FileMixin, TableMixin):
     db_name: str
     engine: any
     file: Path
-    _rows: Tuple[str] = field(default_factory=tuple)
-    _col_prefix: str = ''
-    _type_mapping: dict = field(default_factory=dict)
-    _field_options: dict = field(default_factory=dict)
+    rows: Tuple[str] = field(default_factory=tuple)
+    col_prefix: str = ''
+    type_mapping: dict = field(default_factory=dict)
+    field_options: dict = field(default_factory=dict)
 
     def generate(self):
-        self.write_rows(file=self.file, mode='w', rows=self._rows)
+        self.write_rows(file=self.file, mode='w', rows=self.rows)
         tables = self.read_tables(db_name=self.db_name, engine=self.engine)
         tables.groupby('TABLE_NAME').apply(self._make_from_table)
 
@@ -87,12 +87,12 @@ class Creation(FileMixin, TableMixin):
         params = []
         col_name: str = col['COLUMN_NAME']
         col_type = col['DATA_TYPE']
-        res = f"{space * 4}{col_name} = {self._col_prefix}.{self._type_mapping[col_type]}()"
+        res = f"{space * 4}{col_name} = {self.col_prefix}.{self.type_mapping[col_type]}()"
 
         is_null = col['IS_NULLABLE'] == 'YES'  # Set the default to None
         if is_null:
             params.append(is_null)
-            null_str = f"{self._field_options['IS_NULLABLE']}={is_null},"
+            null_str = f"{self.field_options['IS_NULLABLE']}={is_null},"
             res = self.combine_param(res=res, param_str=null_str, is_first=self._is_param_first(params))
 
         # default has (null, CURRENT_TIMESTAMP, int, float, empty str, str)
@@ -101,9 +101,9 @@ class Creation(FileMixin, TableMixin):
             params.append(col_default)
             default_val = python_type_mapping[col_type](col_default)
             if isinstance(default_val, str):
-                default_str = f"{self._field_options['COLUMN_DEFAULT']}='{default_val}',"
+                default_str = f"{self.field_options['COLUMN_DEFAULT']}='{default_val}',"
             else:
-                default_str = f"{self._field_options['COLUMN_DEFAULT']}={default_val},"
+                default_str = f"{self.field_options['COLUMN_DEFAULT']}={default_val},"
             res = self.combine_param(res=res, param_str=default_str, is_first=self._is_param_first(params))
 
         # keys has (MUL PRI UNI)
@@ -111,12 +111,12 @@ class Creation(FileMixin, TableMixin):
         if col_key:  # cannot handle foreignkey
             if col_key == 'UNI':
                 params.append(col_key)
-                unique_str = f"{self._field_options['UNI']}=True,"
+                unique_str = f"{self.field_options['UNI']}=True,"
                 res = self.combine_param(res=res, param_str=unique_str, is_first=self._is_param_first(params))
 
             elif col_key == 'PRI':
                 params.append(col_key)
-                pk_str = f"{self._field_options['PRI']}=True,"
+                pk_str = f"{self.field_options['PRI']}=True,"
                 res = self.combine_param(res=res, param_str=pk_str, is_first=self._is_param_first(params))
 
             elif col_key == 'MUL':
@@ -129,7 +129,7 @@ class Creation(FileMixin, TableMixin):
             col_str_len = int(float(str(col['CHARACTER_MAXIMUM_LENGTH'])))
             if col_str_len > 0:
                 params.append(col_str_len)
-                len_str = f"{self._field_options['CHARACTER_MAXIMUM_LENGTH']}={col_str_len},"
+                len_str = f"{self.field_options['CHARACTER_MAXIMUM_LENGTH']}={col_str_len},"
                 res = self.combine_param(res=res, param_str=len_str, is_first=self._is_param_first(params))
         except ValueError:
             pass
@@ -143,15 +143,17 @@ class Creation(FileMixin, TableMixin):
 @dataclass
 class OrmCreation(Creation):
     """Used to generate orm for tables."""
-    _col_prefix = 'orm'
-    _type_mapping = orm_type_mapping
-    _field_options = orm_field_options
-    _rows: Tuple[str] = (
+    rows: Tuple[str] = (
         "import orm",
         "import sqlalchemy\n",
         "from app.db import database\n",
         "metadata = sqlalchemy.MetaData()\n\n"
     )
+
+    def __post_init__(self):
+        self.type_mapping = orm_type_mapping
+        self.field_options = orm_field_options
+        self.col_prefix = 'orm'
 
     def _class_rows(self, tb_name: str) -> Tuple[str]:
         return (
@@ -164,12 +166,14 @@ class OrmCreation(Creation):
 
 @dataclass
 class TortoiseOrmCreation(Creation):
-    _col_prefix = 'fields'
-    _type_mapping = tortoise_type_mapping
-    _field_options = tortoise_field_options
-    _rows: Tuple[str] = (
+    rows: Tuple[str] = (
         "from tortoise import fields, models",
     )
+
+    def __post_init__(self):
+        self.type_mapping = tortoise_type_mapping
+        self.field_options = tortoise_field_options
+        self.col_prefix = 'fields'
 
     def _class_rows(self, tb_name: str) -> Tuple[str]:
         return (
@@ -179,7 +183,7 @@ class TortoiseOrmCreation(Creation):
 
 @dataclass
 class InterfaceCreation(Creation):
-    _rows: Tuple[str] = (
+    rows: Tuple[str] = (
         "from pydantic import BaseModel\n",
         "from datetime import datetime\n\n"
     )

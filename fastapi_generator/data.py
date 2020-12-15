@@ -14,7 +14,7 @@ orm_type_mapping = {
     "timestamp": "DateTime",
 }
 
-orm_field_options = {
+tortoise_field_options = {
     "IS_NULLABLE": "null",
     "COLUMN_DEFAULT": "default",
     "CHARACTER_MAXIMUM_LENGTH": "max_length",
@@ -22,7 +22,7 @@ orm_field_options = {
     "PRI": "pk",
 }
 
-tortoise_field_options = {
+orm_field_options = {
     "IS_NULLABLE": "allow_null",
     "COLUMN_DEFAULT": "default",
     "CHARACTER_MAXIMUM_LENGTH": "max_length",
