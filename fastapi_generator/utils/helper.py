@@ -121,7 +121,7 @@ class Creation(FileMixin, TableMixin):
 
             elif col_key == 'MUL':
                 foreign_name = f"{col_name[:-3]}s".capitalize()
-                foreign_key_str = f"{space * 4}# {col_name[:-3]}=orm.ForeignKey({foreign_name})"
+                foreign_key_str = f"{space * 4}# {col_name[:-3]}={self.col_prefix}.ForeignKey({foreign_name})"
                 self.write_rows(file=self.file, mode='a', row=foreign_key_str)
 
         # str len
@@ -167,7 +167,7 @@ class OrmCreation(Creation):
 @dataclass
 class TortoiseOrmCreation(Creation):
     rows: Tuple[str] = (
-        "from tortoise import fields, models",
+        "from tortoise import fields, models\n\n",
     )
 
     def __post_init__(self):
