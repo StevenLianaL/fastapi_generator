@@ -7,7 +7,7 @@ with Path("README.md").open("r", encoding='utf8') as fh:
 
 setuptools.setup(
     name="fastapi_generator",
-    version="0.4.0",
+    version="0.4.1",
     author="Steven Wang",
     author_email="wangzhou8284@outlook.com",
     description="Used to quickly generate fastapi project.",
@@ -18,7 +18,6 @@ setuptools.setup(
     package_data={
         '': ['*', '.gitignore'],
         'fastapi_generator': ['templates/sub/*', 'templates/api/*'],
-
     },
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -34,7 +33,6 @@ setuptools.setup(
         'aiomysql',
         'mysqlclient',
         'pandas',
-        'orm'
     ],
     entry_points='''
         [console_scripts]
