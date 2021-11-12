@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
+# from tortoise.contrib.fastapi import register_tortoise
 
 from app.config import project
 from app.db import database
@@ -32,3 +33,12 @@ async def shutdown():
 sub_app_names = [i.stem for i in project.SUB_APP_DIR.iterdir()]
 for sub_app_name in sub_app_names:
     app.mount(f"/{sub_app_name}", app=load_app(sub_app_name), name=sub_app_name)
+
+
+# register_tortoise(
+#     app,
+#     db_url=f'mysql://{project.DB_USER}:{project.DB_PSWD}@{project.DB_HOST}:3306/{project.DB_NAME}',
+#     modules={"models": ["app.models"]},
+#     generate_schemas=False,
+#     add_exception_handlers=True,
+# )
