@@ -1,20 +1,4 @@
-from fastapi import FastAPI
-from starlette.middleware.cors import CORSMiddleware
-
 import_setting_flag
-from app.utils import load_api
+from app.utils import Appbuilder
 
-
-app = FastAPI()
-app.add_middleware(CORSMiddleware,
-                   allow_origins='*',
-                   allow_methods=['*'],
-                   allow_headers=['*'],
-                   allow_credentials=True)
-
-for router_file in settings.router_dir.iterdir():
-    api_name = router_file.stem.replace('_api', '')
-    if api_name != "__pycache__":
-        api = load_api(sub_app_name=settings.app_name, api_name=api_name)
-        app.include_router(router=api, prefix=f"/{api_name}", tags=[api_name])
-
+app = Appbuilder(app_name=settings.app_name).app
