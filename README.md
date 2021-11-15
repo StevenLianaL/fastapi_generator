@@ -30,6 +30,9 @@
     
     
 ## Version
+- 0.5.0
+  - update more tortoise orm
+  - use more template code
 - 0.4.0
   - support tortoise orm with mode t
 - 0.3.7 
