@@ -30,6 +30,8 @@
     
     
 ## Version
+- 0.5.1
+  - fix error import auth headers
 - 0.5.0
   - update more tortoise orm
   - use more template code

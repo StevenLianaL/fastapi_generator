@@ -9,7 +9,6 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.config import project
 # from app.middle import RecordMiddleware
-from app.sub_apps.auth.depends import AuthHeaders
 
 
 def load_app(sub_app_name: str) -> FastAPI:
